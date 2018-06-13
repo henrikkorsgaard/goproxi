@@ -1,0 +1,9 @@
+ [Unit]
+ Description=GoProxi proximity sensing
+
+ [Service]
+ Type=idle
+ ExecStart=/home/pi/goproxi/goproxi
+
+ [Install]
+ WantedBy=multi-user.target

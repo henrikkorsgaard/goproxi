@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <style>
+            html, body {
+                margin:0px auto;
+                text-align: center;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            #location {
+                padding-top: 30%;
+            }
+
+        </style>
+        <script src="js/goproxi.js"></script>
+    </head>
+    <body>
+        <h1 id="location">Location: <span></span></h1>
+        <h1 id="device">Device: <span></span></h1>
+        <h1 id="zone">Proximity zone: <span>PublicZone</span></h1>
+        <script>
+            var zone = document.querySelector("#zone span")
+            var loc = document.querySelector("#location span")
+            var d = document.querySelector("#device span")
+            goproxi.DeviceObserver.on("DeviceChangedProximityZone", function(e){
+                console.log(e)
+                zone.innerHTML = "kaljhdaiklhd"
+            })
+
+            goproxi.DeviceObserver.on("ready", function(e){
+                console.log(e)
+                console.log(goproxi.DeviceObserver.proximity)
+                loc.innerHTML = goproxi.DeviceObserver.proximity.name
+                d.innerHTML = goproxi.DeviceObserver.device.name
+            })
+            
+         
+            
+        </script>
+    </body>
+</html>

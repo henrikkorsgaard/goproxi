@@ -1,0 +1,10 @@
+[Unit]
+Description=Webstrates Server
+
+[Service]
+WorkingDirectory=/home/pi/Webstrates
+ExecStart=/usr/bin/nodejs webstrates.js
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

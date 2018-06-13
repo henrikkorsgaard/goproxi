@@ -44,7 +44,7 @@ git clone https://github.com/Webstrates/Webstrates.git
 
 # Installing Webstrates
 echo "Installing Webstrates production"
-cd /opt/
+cd /opt/Webstrates
 npm install --production 
 npm run build
 

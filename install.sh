@@ -12,6 +12,12 @@ apt-get -y upgrade
 echo "Installing external dependencies"
 apt-get install -y nmap hostapd dnsmasq libpcap-dev wireless-tools avahi-daemon avahi-utils git mongodb
 
+# Disabling network services on startup
+echo "Disabling network services on startup"
+systemctl disable networking.service
+systemctl disable hostapd.service
+systemctl disable dnsmasq.service
+
 # Remove previous versions of Node.js
 echo "Removing Node.js if installed"
 apt-get remove -y nodejs

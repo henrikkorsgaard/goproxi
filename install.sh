@@ -2,7 +2,7 @@
 
 # Update package sources
 echo "Updating package sources"
-apt-get update
+apt-get -y update
 
 # Upgrade system
 echo "Upgrading system"

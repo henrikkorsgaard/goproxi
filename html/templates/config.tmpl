@@ -34,8 +34,8 @@
     <h4>GoProxi Authentication</h4><div class="button save" >Save</div>
     <div class="setting">
       <div class="content">
-        <input type="text" placeholder="SSID" id="ssid" value="{{.AuthLogin}}">
-        <input type="text" id="password" placeholder="PASSWORD" value="{{.AuthPass}}" />
+        <input type="text" placeholder="Basic Auth login" id="authLogin" value="{{.AuthLogin}}">
+        <input type="text" id="authPassword" placeholder="Basic Auth password" value="{{.AuthPass}}" />
       </div>
       <div class="tooltip">GoProxi nodes have basic authentication enabled to avoid anyone changing the settings and associated documents. Default is login: goproxi, password: here.local</div>
     </div>
@@ -59,13 +59,17 @@
 	configs.contextServer = {{.ContextServer}};
 	configs.document = {{.Document}};
 	configs.document = {{.Parent}};
+    configs.autLogin = {{.AuthLogin}}
+	configs.authPassword = {{.AuthPass}};
 
 
 	var elements = {}
 	elements.location = document.querySelector('#location input[type="text"]')
 	elements.document = document.querySelector('#document input[type="text"]')
-	elements.parent= document.querySelector('#place input[type="text"]')
-	elements.ssid = document.querySelector('#network input[type="text"]#ssid')
+	
+	elements.authLogin = document.querySelector('#authentication input[type="text"]#authLogin')
+	elements.authPassword = document.querySelector('#authentication input[type="text"]#authPassword')
+    elements.ssid = document.querySelector('#network input[type="text"]#ssid')
 	elements.password = document.querySelector('#network input[type="text"]#password')
 	elements.contextServer = document.querySelector('#contextServer input[type="text"]')
 	
@@ -98,7 +102,7 @@
 		var s = closestSection(t)
 		var save = s.querySelector(".save")
 		var config;
-		/*
+        /*
 		if(t.id === ""){
 			config = s.id
 		} else {
@@ -123,7 +127,7 @@
 		if(locationString != configs.location || elements.ssid.value != configs.ssid || elements.password.value != configs.password){
 			rebooting.classList.add("active")
 		}
-		var obj = {action:"update", location:locationString, document: elements.document.value, parent: elements.parent.value,ssid:elements.ssid.value, password:elements.password.value, contextServer:elements.contextServer.value}
+		var obj = {action:"update", location:locationString, document: elements.document.value,ssid:elements.ssid.value, password:elements.password.value, contextServer:elements.contextServer.value, basicLogin:elements.authLogin.value, authLogin:elements.authLogin.value, authPassword: elements.authPassword.value}
 		sendData(obj)
 		
 	}

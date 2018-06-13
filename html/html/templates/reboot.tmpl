@@ -1,0 +1,42 @@
+{{define "reboot"}}
+<html>
+<head>
+	<title>GoProxi Configuration</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="public/css/config.css" rel="stylesheet" type="text/css">
+</head>
+
+<div class="pane reboot">
+	<h1>Rebooting device, please wait...</h1>
+	<h3 id="timer">60 seconds</h3>
+	<script>
+		t = document.querySelector("#timer")
+		c = 60
+		setInterval(()=>{
+			c--;
+			t.innerHTML = c + " seconds"
+			
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', '/config');
+			xhr.onreadystatechange = ()=>{
+			  var DONE = 4; 
+			  var OK = 200;
+			  if (xhr.readyState === DONE) {
+			    if (xhr.status === OK) {
+			     	window.location.href = '/config';
+			    }
+				
+				if(c <= 0){
+					t.innerHTML = c + "Please reconnect to the network and/or to the GoProxi node from your device!"
+				}
+			  }
+			};
+			xhr.send(null);
+			
+		}, 1000)
+	</script>
+</div>
+</body>
+</html>
+
+{{end}}

@@ -1,0 +1,174 @@
+{{define "config"}} {{template "head" . }}
+<div class="pane" id="config">
+  <div id="rebooting">Reboot required for changes to work. <div class="button">Reboot now?</div></div>
+  <div class="section" id="location"> 
+    <h4>GoProxi Location Name</h4><div class="button save" >Save</div>
+    <div class="setting">
+      <div class="content" >
+        <input type="text" placeholder="Location name" maxlength="49" value="{{.Location}}" />
+      </div>
+      <div class="tooltip">Consider something meaningful to the place or object the device is instrumenting, e.g. living-room, printer-02 or common-area. Must be below 30 characters, can contain letters [a-z], numbers [0-9], and "-".</div>
+    </div>
+  </div>
+  <div class="section" id="document"> 
+    <h4>GoProxi node URL</h4><div class="button save" >Save</div>
+    <div class="setting">
+      <div class="content" >
+        <input type="text" maxlength="100" value="{{.Document}}" />
+		<div class="button" id="test-url">Test URL</div>
+      </div>
+      <div class="tooltip">Each node should to be associated with a webpage (global or local). This page contains the content associated with the node and showed to the clients when within proximity. The webpage need to contain a valud url.</div>
+    </div>
+  </div>
+  <div class="section" id="network">
+    <h4>GoProxi Network Settings</h4><div class="button save" >Save</div>
+    <div class="setting">
+      <div class="content">
+        <input type="text" placeholder="SSID" id="ssid" value="{{.SSID}}">
+        <input type="text" id="password" placeholder="PASSWORD" value="{{.Password}}" />
+      </div>
+      <div class="tooltip">As a minimum, goproxi require access to a WLAN. The nodes need to be on the same network as the client devices to do proximity detection. If unable to join the network, this node will establish an access point. It is possible to allow other goproxinodes to connect to this, but it is not recommended.</div>
+    </div>
+  </div>
+  <div class="section" id="authentication">
+    <h4>GoProxi Authentication</h4><div class="button save" >Save</div>
+    <div class="setting">
+      <div class="content">
+        <input type="text" placeholder="Basic Auth login" id="authLogin" value="{{.AuthLogin}}">
+        <input type="text" id="authPassword" placeholder="Basic Auth password" value="{{.AuthPass}}" />
+      </div>
+      <div class="tooltip">GoProxi nodes have basic authentication enabled to avoid anyone changing the settings and associated documents. Default is login: goproxi, password: here.local</div>
+    </div>
+  </div>
+  <div class="section" id="contextServer">
+ 	 <h4>GoProxi Context Server</h4><div class="button save" >Save</div>
+    <div class="setting">
+      <div class="content">
+        <input type="text" placeholder="Server URL" maxlength="100" value="{{.ContextServer}}" />
+        <div class="button" id="test-context">Test connection</div>
+      </div>
+      <div class="tooltip">Goproxi require a context-server collecting all the proximity data and supporting the client API. The default is 'local', where one of the goproxi nodes will automatically act as context-server (here.local/api). Enter an alternative URL if wanting to use a global context-server (redirects here.local).</div>
+    </div>
+  </div>
+  <script>
+
+	var configs = {}
+	configs.location = {{.Location}};
+	configs.ssid = {{.SSID}}
+	configs.password = {{.Password}};
+	configs.contextServer = {{.ContextServer}};
+	configs.document = {{.Document}};
+	configs.document = {{.Parent}};
+    configs.autLogin = {{.AuthLogin}}
+	configs.authPassword = {{.AuthPass}};
+
+
+	var elements = {}
+	elements.location = document.querySelector('#location input[type="text"]')
+	elements.document = document.querySelector('#document input[type="text"]')
+	
+	elements.authLogin = document.querySelector('#authentication input[type="text"]#authLogin')
+	elements.authPassword = document.querySelector('#authentication input[type="text"]#authPassword')
+    elements.ssid = document.querySelector('#network input[type="text"]#ssid')
+	elements.password = document.querySelector('#network input[type="text"]#password')
+	elements.contextServer = document.querySelector('#contextServer input[type="text"]')
+	
+	var rebooting = document.querySelector("#rebooting")
+	var rebootBtn = rebooting.querySelector(".button")
+	rebootBtn.onclick = ()=>{
+		var c = confirm("Do you want to reboot the GoProxi now?")
+		if(c){
+			sendData({action:"reboot"})//all
+			location.href = "/reboot"
+		}
+	}
+	
+	document.querySelector("#test-context").onclick = testServerConnection
+	document.querySelector("#test-url").onclick = testURLConnection
+	
+	
+	var inputs = document.querySelectorAll('input[type="text"]')
+	for(var i = 0, n = inputs.length; i < n ; i++){
+		inputs[i].onkeyup = keyChange
+	}
+	
+	var saves = document.querySelectorAll('.save')
+	for(var i = 0, n = saves.length; i < n ; i++){
+		saves[i].onclick = updateConfiguration
+	}
+	
+	function keyChange(e){
+		var t = e.target
+		var s = closestSection(t)
+		var save = s.querySelector(".save")
+		var config;
+        /*
+		if(t.id === ""){
+			config = s.id
+		} else {
+			config = t.id
+		}*/
+		
+		if(t.value !== configs[config]){
+			save.classList.add("active")
+		} else {
+			save.classList.remove("active")
+		}
+	}
+	
+	function updateConfiguration(e){
+		//need to save something
+		for(var i = 0, n = saves.length; i < n ; i++){
+			saves[i].classList.remove("active")
+		}
+		var locationString = removeSpecials(elements.location.value)
+		elements.location.value = locationString
+		
+		if(locationString != configs.location || elements.ssid.value != configs.ssid || elements.password.value != configs.password){
+			rebooting.classList.add("active")
+		}
+		var obj = {action:"update", location:locationString, document: elements.document.value,ssid:elements.ssid.value, password:elements.password.value, contextServer:elements.contextServer.value, basicLogin:elements.authLogin.value, authLogin:elements.authLogin.value, authPassword: elements.authPassword.value}
+		sendData(obj)
+		
+	}
+	
+	function removeSpecials(str) {
+	    var lower = str.toLowerCase();
+	    var upper = str.toUpperCase();
+
+	    var res = "";
+	    for(var i=0; i<lower.length; ++i) {
+	        if(lower[i] != upper[i] || lower[i].trim() === '' || !isNaN(parseInt(lower[i])) ||lower[i] === '-' ){
+	        	res += str[i];
+	        }
+	            
+	    }
+	    return res.replace(new RegExp(" ", 'g'), "-");
+	}
+	
+	
+	function closestSection(el) {
+	  var section = null;
+	  while (el) {
+	    if (el.matches(".section")) {
+	      section = el;
+	      break
+	    } else if (el.matches(".pane")) {
+	      break
+	    }
+	    el = el.parentElement;
+	  }
+	  return section;
+	}
+	
+    function testURLConnection() {
+      //this could be done as an ajax call
+    }
+
+    function testServerConnection() {
+      //this could be done as an ajax call
+    }
+
+  </script>
+</div>
+{{template "foot"}} {{end}}

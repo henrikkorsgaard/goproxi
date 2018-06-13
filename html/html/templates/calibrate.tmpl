@@ -1,0 +1,121 @@
+{{define "calibrate"}}
+{{template "head" . }}
+<div class="pane">
+    <div class="step" id="one">
+		<h4>Calibrate proximity sensor</h4>
+		<p>Calibrating this proximity sensor involves 5 steps and takes around 2 minutes. Each step involves 20 seconds of data measurements at a specific distance. It is important that the device is always facing the proximity sensor and is not blocked by people, objects or your hands.</p>
+		<p>Environmental factors affect the accuracy (devices, people, objects, radio noise etc.), so the calibration is a rough estimate. Repeating it with different devices can improve proximity accuracy.</p>
+
+		<div class="button">Press to start calibration</div>
+    </div>
+		
+    <div class="step hide" id="two">
+    	<h4>Calibrate touch proximity</h4>
+		<p>First step is to calibrate the proximity sensor at touch proximity. Hold the device as close as possible to the proximity sensor. If possible, let the device touch the proiximity sensor.</p>
+		
+		<div class="button progress">Start capturing data</div>
+		<div class="button next">Next</div>
+		
+    </div>
+	
+    <div class="step hide" id="three">
+		<h4>Calibrate at 1 meter</h4>
+		<p>Second step is to calibrate the sensor at one meters distance. Move approximately a meter away from the device (one large step back). Remeber to face the proximity sensor and avoid blocking or covering the device with your hands.</p>
+		
+		<div class="button progress">Start capturing data</div><div class="button next">Next</div>
+		
+    </div>
+	
+    <div class="step hide" id="four">
+		<h4>Calibrate at 4 meters</h4>
+		<p>Third step is to calibrate the sensor at 4 meters distance. Move approximately 4 meters away from the device (approximately five steps back). Remeber to keep facing the proximity sensor and avoid blocking or covering the device with your hands.</p>
+		
+		<div class="button progress">Start capturing data</div><div class="button next">Next</div>
+		
+    </div>
+    <div class="step hide" id="five">
+    	<h4>Calibrate at 10 metres</h4>
+		<p>Fourth step is to calibrate the proximity sensor at 10 meters distance. Move approximately 10 meters away from the device (approximately 12 steps back). Remeber to keep facing the proximity sensor and avoid blocking or covering the device with your hands.</p>
+		
+		<div class="button progress">Start capturing data</div><div class="button next">Next</div>
+		
+    </div>
+	
+    <div class="step hide" id="seven">
+    	 <h4>Calibration done!</h4>
+		<p>Remember, it is an estimate. If you experience large offsets in accuracy, try calibrating again or use a different device.</p>
+		<div class="button next" id="finish">Finish calibration</div>	
+    </div>
+	<script>
+		
+		var sock = null;
+		var wsuri = "ws://here.local/ws";
+		var pane = document.querySelector(".pane")
+		var btns = pane.querySelectorAll(".button")
+		
+		for(var i = 0, n = btns.length; i < n ; i++){
+			btns[i].addEventListener('click', buttonClicked)
+		}
+		
+		console.log(document.querySelector("#one .button"))
+		
+		
+		sock = new WebSocket(wsuri);
+		
+	    sock.onopen = function() {
+	        console.log("connected to " + wsuri);
+	    }
+
+	    sock.onclose = function(e) {
+	        console.log("connection closed (" + e.code + ")");
+	    }
+
+	    sock.onmessage = function(e) {
+	        
+	    }
+		
+		
+		function buttonClicked(evt){
+		
+			if(evt.target.id === "finish"){
+				location.reload();
+			}
+			
+			var step = evt.target.parentNode
+			var next = step.nextElementSibling
+			var nextBtn = step.querySelector(".button.next")			
+			
+			if(!evt.target.classList.contains("progress")){
+				step.classList.add("hide")
+				next.classList.remove("hide")
+			} else {
+				
+				if(step.id === "two" && sock.readyState === 1){
+					sock.send(JSON.stringify({"request":"calibrate", "distance": "IntimateZone"})) 
+				}
+			
+				if(step.id === "three" && sock.readyState === 1){
+					sock.send(JSON.stringify({"request":"calibrate", "distance": "PersonalZone"})) 
+				}
+			
+				if(step.id === "four" && sock.readyState === 1){
+					sock.send(JSON.stringify({"request":"calibrate", "distance": "SocialZone"})) 
+				}
+				
+				if(step.id === "five" && sock.readyState === 1){
+					sock.send(JSON.stringify({"request":"calibrate", "distance": "PublicZone"})) 
+				}
+				
+				evt.target.innerHTML = "Capturing..."
+				evt.target.style.backgroundPosition = "left bottom"
+				setTimeout(function(){
+					nextBtn.style.display = "inline-block"
+					evt.target.style.display = "none"
+				}, 20000)
+			}
+			
+		}
+	</script>
+</div>
+{{template "foot"}}
+{{end}}

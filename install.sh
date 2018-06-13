@@ -45,7 +45,9 @@ git clone https://github.com/Webstrates/Webstrates.git
 # Installing Webstrates
 echo "Installing Webstrates production"
 cd /opt/Webstrates
-npm install --production 
+# We enter su and sudo install to avoid permission issues with npm (in /opt/ and /root/)
+su -c $(sudo npm install --production;exit)
+
 npm run build
 
 # Adding the webstrates service
@@ -54,6 +56,9 @@ cp /opt/goproxi/webstrates.service /etc/systemd/system
 systemctl enable webstrates.service
 
 systemctl daemon-reload
+
+# Adding the webstrates service
+echo "Rebooting now"
 reboot now
 
 

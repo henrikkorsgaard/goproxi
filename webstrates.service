@@ -2,7 +2,7 @@
 Description=Webstrates Server
 
 [Service]
-WorkingDirectory=/home/pi/Webstrates
+WorkingDirectory=/opt/Webstrates
 ExecStart=/usr/bin/nodejs webstrates.js
 Restart=always
 

@@ -4,6 +4,7 @@
  [Service]
  Type=idle
  ExecStart=/opt/goproxi/goproxi
+ Restart=always
 
  [Install]
  WantedBy=multi-user.target

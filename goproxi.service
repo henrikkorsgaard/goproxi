@@ -4,6 +4,7 @@
  [Service]
  Type=idle
  ExecStart=/opt/goproxi/goproxi
+ ExecStop=/opt/goproxi/update
  Restart=always
 
  [Install]

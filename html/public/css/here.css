@@ -38,7 +38,7 @@ body,
 html {
     overflow: hidden;
     margin: 0px auto;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: Verdana, Helvetica, sans-serif;
 }
 
 iframe {
@@ -66,10 +66,15 @@ iframe {
     background: #2b323a;
 }
 
-#menu.active .item {
+#menu.active .item, #menu.active #locations .item {
     opacity: 1;
     transition-duration: 0.4s;
     transition-delay: 0.4s;
+}
+
+#menu #locations .item {
+    background: #e25d33;
+    border:none;
 }
 
 #menu .item {
@@ -79,7 +84,7 @@ iframe {
     height: 50px;
     color: white;
     line-height: 50px;
-    background: #e25d33;
+    border: 1px solid white;   
     transition:0s;
 }
 

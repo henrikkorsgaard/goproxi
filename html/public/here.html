@@ -12,6 +12,9 @@
         <div id="icon">
         </div>
         <div id="locations"></div>
+        <div>
+            <div class="item" id="explore">Explore</div>
+        </div>
     </div>
     <iframe src=""></iframe>
     <script>
@@ -19,55 +22,77 @@
         var menuElement = document.querySelector("#menu")
         var iconElement = document.querySelector("#icon")
         var locationsElement = document.querySelector("#locations")
-
-        //var redirect = true; //Redirects when not in menu or outside location.
+        var exploreElement = menuElement.querySelector("#explore")
+        var redirect = true; 
 
         menuElement.addEventListener("click", function (evt) {
             var t = evt.target
             if (t.id === "icon") {
                 menuElement.classList.toggle("active")
+            } else if(t.id === "explore"){
+                loadIframe("public/explore.html")
+                menuElement.classList.toggle("active")
+
+            } else if (t.classList.contains("location")){
+                loadIframe("http://"+t.dataset.name+".local");
+                menuElement.classList.toggle("active")
             }
-        })
+        });
 
         goproxi.DeviceObserver.on("DeviceChangedProximity", function (e) {
             hintUpdate()
             console.log("changing proximity")
             updateLocationList()
             loadIframe()
-        })
+        });
 
         goproxi.DeviceObserver.on("ready", function () {
             hintUpdate()
             updateLocationList()
-            loadIframe()
-        })
+            loadIframe(goproxi.DeviceObserver.proximity.document || "http://" + goproxi.DeviceObserver.proximity.ip)
+        });
 
         function hintUpdate() {
             iconElement.classList.add("animate")
-            setTimeout(function(){
+            setTimeout(function () {
                 iconElement.classList.remove("animate")
             }, 1000)
         }
 
         function updateLocationList() {
 
-            var locs = goproxi.DeviceObserver.locations
-            for (var i = 0, n = locs.length; i < n; i++) {
+            var locations = goproxi.DeviceObserver.locations
+            var locationElements = locationsElement.querySelectorAll(".item")
+            
+            //Ideas: place a small avatar next to the current location
+            //
+            for (var i = 0, n = locations.length; i < n; i++) {
+                var found = false
+                for (var j = 0, k = locationElements.length; j < k; j++) {
+                    if (locationsElement[j].dataset.name === locations[i].name) {
+                        found = true
+                        break
+                    }
+                }
 
-                var loc = locs[i]
-                var el = document.createElement("div")
-                el.classList = "item"
-                el.innerHTML = loc.name
-                locationsElement.append(el)
-                if (loc.name === goproxi.DeviceObserver.proximity.name) {
-                    el.classList.add("this")
+                if (!found) {
+                    var el = document.createElement("div")
+                    el.classList = "item location"
+                    
+                    el.innerHTML = locations[i].name
+                    
+                    el.dataset.name = locations[i].name
+                    locationsElement.append(el)
+                    if (locations[i].name === goproxi.DeviceObserver.proximity.name) {
+                        el.classList.add("this")
+                    }
                 }
             }
         }
 
-        function loadIframe() {
-            console.log("Goproxi ready")
-            iframeElement.src = goproxi.DeviceObserver.proximity.document || "http://" + goproxi.DeviceObserver.proximity.ip
+        function loadIframe(target) {
+            console.log("loading iframe with ", target)
+            iframeElement.src = target
         }
     </script>
 </body>

@@ -1,0 +1,61 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="css/explore.css">
+    </head>
+    <body>
+        <div id="locations">
+            <h2>Sensing Nodes</h2>
+        </div>
+        <div id="devices">
+            <h2>Detected devices</h2>
+        </div>
+        <div id="self">
+            <h2>Client information</h2>
+        </div>
+
+    <script>
+        var goproxi = window.top.goproxi;
+        var locationsElement = document.querySelector("#locations")
+        var devicesElement = document.querySelector("#devices")
+        var selfElement = document.querySelector("#self")
+
+        var locations = goproxi.PlaceObserver.locations
+        var devices = goproxi.PlaceObserver.devices
+        var proximity = goproxi.DeviceObserver.proximity
+        //var self = goproxi.LocationObserver.devices
+        
+        
+
+        for (var i = 0, n = locations.length; i < n; i++) {
+            var el = document.createElement("div");
+            el.classList = "location"
+            el.innerHTML = `<h3>${locations[i].name}</h3>`;
+            
+            el.innerHTML += `<a target="_top" href="http://${locations[i].name}.local">PAGE</a>`;
+            el.innerHTML += `<a target="_top" href="http://${locations[i].name}.local/config">CONFIGURE</a>`;
+            el.innerHTML += `<a target="_top" href="http://${locations[i].name}.local/calibrate">CALIBRATE</a>`;
+            el.innerHTML += `<a target="_top" href="http://${locations[i].name}.local/reboot">REBOOT</a>`;
+            locationsElement.appendChild(el)
+        }
+
+        for (var i = 0, n = devices.length; i < n; i++) {
+            var el = document.createElement("div");
+            el.classList = "device"
+            var html = `<h4>${devices[i].name}</h4>`
+            html += '<table><tr><th>Location</th><th>Signal</th></tr>';
+            
+            var deviceLocations = devices[i].locations
+            for(var j = 0, k = deviceLocations.length; j < k; j++ ){
+                html += '<tr><td>' + deviceLocations[j].name + '</td><td>' + deviceLocations[j].signal + '</td></tr>'
+            }
+            
+            html += '</table>';
+            el.innerHTML = html;
+            
+            devicesElement.appendChild(el)
+        }
+
+        
+    </script>
+    </body>
+</html>

@@ -1,0 +1,56 @@
+body,
+html {
+    overflow: hidden;
+    margin: 20px 110px;
+    font-family: Verdana, Helvetica, sans-serif;
+}
+
+#locations .location {
+    display:inline-block;
+    padding:10px;
+    margin:5px;
+    text-align: center;
+    background: #e25d33;
+    color:white;
+    width:250px;
+}
+
+h3, h4 {
+    margin:10px 0px 10px 0px;
+}
+
+#locations .location a {
+    font-size:70%;
+    display: inline-block;
+    margin: 5px;
+    color:white;
+}
+
+#locations .location a:hove, #locations .location a:active, #locations .location a:visited {
+    color:white;
+}
+
+#devices .device {
+    background: #249f60;
+    display:inline-block;
+    padding:10px;
+    margin:5px;
+    color:white;
+    min-width: 200px;   
+}
+
+#devices table {
+    border-collapse: collapse;
+    margin-left:2px auto;
+    color:white;
+    font-size: 80%;
+}
+
+#devices table, #devices th, #devices td {
+    border: 1px solid white;
+ }
+
+ #devices table td, #devices table th {
+     text-align: center;
+     padding:2px 5px;
+ }

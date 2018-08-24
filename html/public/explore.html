@@ -22,26 +22,31 @@
         var locations = goproxi.PlaceObserver.locations
         var devices = goproxi.PlaceObserver.devices
         var proximity = goproxi.DeviceObserver.proximity
-        //var self = goproxi.LocationObserver.devices
+        var self = goproxi.DeviceObserver.device
         
-        
-
         for (var i = 0, n = locations.length; i < n; i++) {
+            
             var el = document.createElement("div");
             el.classList = "location"
-            el.innerHTML = `<h3>${locations[i].name}</h3>`;
+            if(locations[i].contextserver){
+                el.classList.add("server");
+            }
+            el.innerHTML = `<h3>${locations[i].name}</h3><span>${locations[i].version}</span>`;
             
             el.innerHTML += `<a target="_top" href="http://${locations[i].name}.local">PAGE</a>`;
             el.innerHTML += `<a target="_top" href="http://${locations[i].name}.local/config">CONFIGURE</a>`;
             el.innerHTML += `<a target="_top" href="http://${locations[i].name}.local/calibrate">CALIBRATE</a>`;
-            el.innerHTML += `<a target="_top" href="http://${locations[i].name}.local/reboot">REBOOT</a>`;
             locationsElement.appendChild(el)
         }
 
         for (var i = 0, n = devices.length; i < n; i++) {
             var el = document.createElement("div");
             el.classList = "device"
-            var html = `<h4>${devices[i].name}</h4>`
+            if( devices[i].mac === self.mac){
+                el.classList.add("self")
+            }
+            el.dataset.mac = devices[i].mac
+            var html = `<h4>${devices[i].name}</h4><div class="ping">PING</div>`
             html += '<table><tr><th>Location</th><th>Signal</th></tr>';
             
             var deviceLocations = devices[i].locations
@@ -55,6 +60,16 @@
             devicesElement.appendChild(el)
         }
 
+        devicesElement.addEventListener("click", function(e){
+            var t = e.target;
+            if(t.classList.contains("ping")){
+               var d = t.parentNode
+               
+               goproxi.PlaceObserver.ping(d.dataset.mac)
+            }
+        });
+
+        
         
     </script>
     </body>

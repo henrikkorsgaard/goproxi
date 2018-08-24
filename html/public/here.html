@@ -21,7 +21,8 @@
         var iframeElement = document.querySelector("iframe")
         var menuElement = document.querySelector("#menu")
         var iconElement = document.querySelector("#icon")
-        var locationsElement = document.querySelector("#locations")
+        var locationsElement = menuElement.querySelector("#locations")
+        
         var exploreElement = menuElement.querySelector("#explore")
         var redirect = true; 
 
@@ -39,11 +40,15 @@
             }
         });
 
+        goproxi.DeviceObserver.on("Ping", function (e) {
+            alert("You've been pinged by " + e.sender.name);
+        });
+
         goproxi.DeviceObserver.on("DeviceChangedProximity", function (e) {
             hintUpdate()
             console.log("changing proximity")
             updateLocationList()
-            loadIframe()
+            loadIframe(goproxi.DeviceObserver.proximity.document || "http://" + goproxi.DeviceObserver.proximity.ip)
         });
 
         goproxi.DeviceObserver.on("ready", function () {
@@ -60,16 +65,16 @@
         }
 
         function updateLocationList() {
-
-            var locations = goproxi.DeviceObserver.locations
-            var locationElements = locationsElement.querySelectorAll(".item")
             
-            //Ideas: place a small avatar next to the current location
-            //
+            var locations = goproxi.PlaceObserver.locations;
+            var locationElements = document.querySelectorAll("#menu .item.location")
+            
+            //Ideas: place a small avatar next to the current locations
             for (var i = 0, n = locations.length; i < n; i++) {
                 var found = false
                 for (var j = 0, k = locationElements.length; j < k; j++) {
-                    if (locationsElement[j].dataset.name === locations[i].name) {
+                    
+                    if (locationElements[j] && locationElements[j].dataset.name === locations[i].name) {
                         found = true
                         break
                     }
@@ -88,6 +93,7 @@
                     }
                 }
             }
+            
         }
 
         function loadIframe(target) {

@@ -1,110 +1,120 @@
 
-(function (global) {
+; (function (global) {
 
     var socket, reconnect, attempts = 0,
         timeout = 1000;
 
     var communications = {}
-    window.onload = function () {
 
-        //TODO: Reach to events
+    //TODO: Reach to events
 
-        socket = new WebSocket("ws://here.local/ws");
+    socket = new WebSocket("ws://here.local:1337/ws");
+    socket.onerror = function (e) {
+        console.log(e)
+    }
 
-        socket.onopen = function (e) {
-            clearInterval(reconnect)
-            attempts = 0;
+    socket.onopen = function (e) {
+        console.log("GoProxi websocket open")
+        clearInterval(reconnect)
+        attempts = 0;
 
-            fetchLocations().then(function(locationData){
-               
-                placeObserver.locations = locationData.response;
+        fetchLocations().then(function (locationData) {
 
-                fetchDevices().then(function(deviceData){
-                    var evt = {
-                        type: "ready"
-                    };
-                    placeObserver.devices = deviceData.response;
-                    emmitPlaceEvent(evt);
-                });
-            });
+            placeObserver.locations = locationData.response;
 
-            fetchClient().then(function (data) {
-                
+            fetchDevices().then(function (deviceData) {
                 var evt = {
                     type: "ready"
                 };
-                
-                deviceObserver.proximity = data.response.proximity;
-                deviceObserver.locations = data.response.locations;
-                delete data.response.locations;
-                delete data.response.proximity;
-                deviceObserver.device = data.response;
+                placeObserver.devices = deviceData.response;
+                emmitPlaceEvent(evt);
+            });
+        });
 
-                emmitDeviceEvent(evt)
-                fetchLocation(deviceObserver.proximity.mac).then(function(locationData){
-                    
-                    locationObserver.devices = locationData.response.devices;
-                    delete data.response.devices;
-                    locationObserver.location = locationData.response;
-                    subscribeLocation(locationData.response.mac);
-                    emmitLocationEvent(evt);
-                }).catch(function(err){
-                    console.log(err);
-                })
+        fetchClient().then(function (data) {
+            
+            var evt = {
+                type: "ready"
+            };
+            
+            deviceObserver.proximity = data.response.proximity;
+            deviceObserver.locations = data.response.locations;
+            delete data.response.locations;
+            delete data.response.proximity;
+            
+            deviceObserver.device = data.response;
+
+            emmitDeviceEvent(evt)
+            fetchLocation(deviceObserver.proximity.mac).then(function (locationData) {
+
+                locationObserver.devices = locationData.response.devices;
+                delete data.response.devices;
+                locationObserver.location = locationData.response;
+                subscribeLocation(locationData.response.mac);
+                emmitLocationEvent(evt);
             }).catch(function (err) {
                 console.log(err);
             })
-        }
+        }).catch(function (err) {
+            console.log(err);
+        })
+    }
 
-        socket.onclose = function (e) {
-            console.log("Goproxi: Websocket connection closed. Attempting to reconnect!");
-            for (var k in communications) {
-                communications[k]("Websocket connection closed!");
+    socket.onclose = function (e) {
+        console.log("Goproxi: Websocket connection closed. Attempting to reconnect!");
+        for (var k in communications) {
+            communications[k]("Websocket connection closed!");
+        }
+        reconnect = setInterval(function () {
+            attempts++;
+        }, timeout * attempts);
+    }
+
+    socket.onmessage = function (e) {
+        data = JSON.parse(e.data);
+        if (data.hasOwnProperty("event")) {
+
+            var evt = {
+                type: data.event,
+                device: data.device,
+                location: data.location
             }
-            reconnect = setInterval(function () {
-                attempts++;
-            }, timeout * attempts);
-        }
 
-        socket.onmessage = function (e) {
-            data = JSON.parse(e.data);
+            if (data.type === "DeviceEvent") {
+                
+                if (data.event === "DeviceChangedProximityZone") {
+                    emmitDeviceEvent(evt);
+                } else if(data.event === "Ping"){
+                    delete evt.location
+                    delete evt.device
+                    evt.sender = data.sender;
+                    evt.receiver = data.receiver;
+                    evt.payload = data.payload;
 
-            if (data.hasOwnProperty("event")) {
-                
-                var evt = {
-                    type: data.event,
-                    device: data.device,
-                    location:data.location
-                }
-                
-                if (data.type === "DeviceEvent") {
-                    if (data.event === "DeviceChangedProximityZone") {
+                    emmitDeviceEvent(evt);
+                } else if (data.event === "DeviceChangedProximity") {
+                    updateLocation().then(function () {
                         emmitDeviceEvent(evt);
-                    } else if (data.event === "DeviceChangedProximity") {
-                        updateLocation().then(function(){
-                            emmitDeviceEvent(evt);
-                        }).catch(function(err){
-                            console.log(err);
-                        })
-                    }
-                } else if (data.type === "LocationEvent") {
-                    if (data.event === "DeviceChangedProximityZone") {
-                        emmitLocationEvent(evt);
-                    } else if (data.event === "DeviceJoinedLocation") {
-                        emmitLocationEvent(evt);
-                    } else if (data.event === "DeviceLeftLocation") {
-                        emmitLocationEvent(evt);
-                    }
+                    }).catch(function (err) {
+                        console.log(err);
+                    })
                 }
-                //we can filter for location events vs device events
-            } else if (data.id && communications.hasOwnProperty(data.id)) {
-                var fn = communications[data.id];
-                delete communications[data.id];
-
-                fn(null, data);
+            } else if (data.type === "LocationEvent") {
+                if (data.event === "DeviceChangedProximityZone") {
+                    emmitLocationEvent(evt);
+                } else if (data.event === "DeviceJoinedLocation") {
+                    emmitLocationEvent(evt);
+                } else if (data.event === "DeviceLeftLocation") {
+                    emmitLocationEvent(evt);
+                }
             }
-        }
+            //we can filter for location events vs device events
+        } else if (data.id && communications.hasOwnProperty(data.id)) {
+            var fn = communications[data.id];
+            delete communications[data.id];
 
+            fn(null, data);
+        }
     }
 
     function emmitDeviceEvent(event) {
@@ -157,18 +167,18 @@
         return s4() + s4() + '';
     }
 
-    function updateLocation(){
+    function updateLocation() {
         return new Promise(function (rs, rj) {
             unsubscribeLocation(deviceObserver.proximity.mac);
-            fetchThis().then(function(data){
-                
+            fetchClient().then(function (data) {
+
                 deviceObserver.proximity = data.response.proximity;
                 deviceObserver.locations = data.response.locations;
                 delete data.response.locations;
                 delete data.response.proximity;
                 deviceObserver.device = data.response;
 
-                fetchLocation(deviceObserver.proximity.mac).then(function(locationData){
+                fetchLocation(deviceObserver.proximity.mac).then(function (locationData) {
                     locationObserver.devices = locationData.response.devices;
                     delete data.response.devices;
                     locationObserver.location = locationData.response;
@@ -182,7 +192,7 @@
     function fetchClient() {
         return new Promise(function (rs, rj) {
             sendMessage({
-                "request": "this"
+                "request": "self"
             }, function (err, data) {
                 if (err) {
                     rj(err);
@@ -209,7 +219,7 @@
     function fetchLocations() {
         return new Promise(function (rs, rj) {
             sendMessage({
-                "request": "locations"                
+                "request": "locations"
             }, function (err, data) {
                 if (err) {
                     rj(err);
@@ -238,14 +248,14 @@
         sendMessage({
             "request": "subscribe",
             "mac": mac
-        }, function (err, data) {});
+        }, function (err, data) { });
     }
 
     function unsubscribeLocation(mac) {
         sendMessage({
             "request": "unsubscribe",
             "mac": mac
-        }, function (err, data) {});
+        }, function (err, data) { });
     }
 
     var locationListeners = {
@@ -260,13 +270,14 @@
         "DeviceJoined": [],
         "DeviceLeft": [],
         "LocationDiscovered": [],
-        "LocationDisappeared": []
+        "LocationDisappeared": [],
     };
 
     var deviceListeners = {
         "ready": [],
         "DeviceChangedProximityZone": [],
-        "DeviceChangedProximity": []
+        "DeviceChangedProximity": [],
+        "Ping":[]
     };
 
     var deviceObserver = {
@@ -311,6 +322,13 @@
                 }
             }
         },
+        ping: function (mac){
+            sendMessage({
+                "request": "ping",
+                "mac": mac,
+                "payload": "Hello"
+            }, function (err, data) {});
+        },
         devices: [],
         locations: []
     };
@@ -320,6 +338,9 @@
         LocationObserver: locationObserver,
         PlaceObserver: placeObserver
     };
+
+
+    //load and add to ping
 
     this.goproxi = goproxi;
 })(this);

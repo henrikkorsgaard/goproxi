@@ -1,4 +1,3 @@
-
 ; (function (global) {
 
     var socket, reconnect, attempts = 0,
@@ -32,21 +31,21 @@
         });
 
         fetchClient().then(function (data) {
-            
+
             var evt = {
                 type: "ready"
             };
-            
+
             deviceObserver.proximity = data.response.proximity;
+            console.log(data.response)
             deviceObserver.locations = data.response.locations;
             delete data.response.locations;
             delete data.response.proximity;
-            
+
             deviceObserver.device = data.response;
 
             emmitDeviceEvent(evt)
             fetchLocation(deviceObserver.proximity.mac).then(function (locationData) {
-
                 locationObserver.devices = locationData.response.devices;
                 delete data.response.devices;
                 locationObserver.location = locationData.response;
@@ -72,6 +71,7 @@
 
     socket.onmessage = function (e) {
         data = JSON.parse(e.data);
+
         if (data.hasOwnProperty("event")) {
 
             var evt = {
@@ -81,10 +81,9 @@
             }
 
             if (data.type === "DeviceEvent") {
-                
                 if (data.event === "DeviceChangedProximityZone") {
                     emmitDeviceEvent(evt);
-                } else if(data.event === "Ping"){
+                } else if (data.event === "Ping") {
                     delete evt.location
                     delete evt.device
                     evt.sender = data.sender;
@@ -98,13 +97,23 @@
                     }).catch(function (err) {
                         console.log(err);
                     })
+                } else if (data.event === "Broadcast") {
+                    delete evt.location
+                    delete evt.device
+                    evt.sender = data.sender;
+                    evt.url = data.url;
+                    emmitDeviceEvent(evt);
                 }
             } else if (data.type === "LocationEvent") {
-                if (data.event === "DeviceChangedProximityZone") {
+                if (data.event === "DeviceChangedProximityZone" || data.event === "DeviceJoinedLocation" || data.event === "DeviceLeftLocation") {
                     emmitLocationEvent(evt);
-                } else if (data.event === "DeviceJoinedLocation") {
-                    emmitLocationEvent(evt);
-                } else if (data.event === "DeviceLeftLocation") {
+                } else if (data.event === "DeviceJoined" || data.event === "DeviceLeft") {
+                    emmitPlaceEvent(evt);
+                } else if (data.event === "Broadcast") {
+                    delete evt.location
+                    delete evt.device
+                    evt.sender = data.sender;
+                    evt.url = data.url;
                     emmitLocationEvent(evt);
                 }
             }
@@ -152,6 +161,29 @@
 
     }
 
+    function emmitError(err, scope) {
+        if (scope === "place") {
+            var listeners = placeListeners["Error"]
+            for (var i = 0, n = listeners.length; i < n; i++) {
+                listeners[i](err);
+            }
+        }
+
+        if (scope === "location") {
+            var listeners = placeListeners["Error"]
+            for (var i = 0, n = listeners.length; i < n; i++) {
+                listeners[i](err);
+            }
+        }
+
+        if (scope === "device") {
+            var listeners = placeListeners["Error"]
+            for (var i = 0, n = listeners.length; i < n; i++) {
+                listeners[i](err);
+            }
+        }
+    }
+
     function sendMessage(msg, callback) {
         msg.id = guid() + Date.now();
         communications[msg.id] = callback;
@@ -173,6 +205,7 @@
             fetchClient().then(function (data) {
 
                 deviceObserver.proximity = data.response.proximity;
+
                 deviceObserver.locations = data.response.locations;
                 delete data.response.locations;
                 delete data.response.proximity;
@@ -262,7 +295,9 @@
         "ready": [],
         "DeviceChangedProximityZone": [],
         "DeviceJoinedLocation": [],
-        "DeviceLeftLocation": []
+        "DeviceLeftLocation": [],
+        "Broadcast": [],
+        "Error": []
     };
 
     var placeListeners = {
@@ -271,13 +306,16 @@
         "DeviceLeft": [],
         "LocationDiscovered": [],
         "LocationDisappeared": [],
+        "Error": []
     };
 
     var deviceListeners = {
         "ready": [],
         "DeviceChangedProximityZone": [],
         "DeviceChangedProximity": [],
-        "Ping":[]
+        "Ping": [],
+        "Broadcast": [],
+        "Error": []
     };
 
     var deviceObserver = {
@@ -322,12 +360,23 @@
                 }
             }
         },
-        ping: function (mac){
+        ping: function (mac) {
             sendMessage({
                 "request": "ping",
                 "mac": mac,
                 "payload": "Hello"
-            }, function (err, data) {});
+            }, function (err, data) { });
+        },
+        broadcast: function (mac, url) {
+            if (ValidURL(url)) {
+                sendMessage({
+                    "request": "broadcast",
+                    "mac": mac,
+                    "url": url
+                }, function (err, data) { });
+            } else {
+                emmitError({ error: "Invalid Url" }, "place")
+            }
         },
         devices: [],
         locations: []
@@ -339,6 +388,15 @@
         PlaceObserver: placeObserver
     };
 
+    function ValidURL(str) {
+        regexp = /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/;
+        if (regexp.test(str)) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 
     //load and add to ping
 

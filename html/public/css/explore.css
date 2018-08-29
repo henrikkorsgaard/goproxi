@@ -66,6 +66,11 @@ h3, h4 {
     font-size: 80%;
 }
 
+#devices .device div {
+    font-size: 80%;
+    padding:2px;
+}
+
 #devices .device .ping {
     padding:2px;
     position: absolute;

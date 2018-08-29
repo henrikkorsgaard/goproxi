@@ -36,6 +36,7 @@
 
 body,
 html {
+    position:relative;
     overflow: hidden;
     margin: 0px auto;
     font-family: Verdana, Helvetica, sans-serif;
@@ -68,13 +69,19 @@ iframe {
 
 #menu.active .item, #menu.active #locations .item {
     opacity: 1;
-    transition-duration: 0.4s;
-    transition-delay: 0.4s;
+    transition-duration: 0.1s;
+    transition-delay: 0.1s;
+    
 }
 
 #menu #locations .item {
     background: #e25d33;
     border:none;
+}
+
+#menu p {
+    text-align: center;
+    color:white;
 }
 
 #menu .item {
@@ -86,6 +93,107 @@ iframe {
     line-height: 50px;
     border: 1px solid white;   
     transition:0s;
+}
+
+#menu  #locations .item#proximity {
+    background: #be3e15;
+}
+
+
+#menu  .item#share {
+    background: #249f60;
+    border:none;
+}
+
+#sharemenu {
+    display:none;
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    margin-left: -200px;
+    width:400px;
+    min-height: 300px;
+    background: #2b323a;
+    text-align: center;
+}
+
+#sharemenu.active {
+    display:block;
+}
+
+#sharemenu input {
+    margin:20px;
+    width:90%;
+    padding:10px;
+    font-size: 125%;
+    border:none;
+}
+
+#sharemenu #devices {
+    text-align: center;
+    margin:0px auto;
+}
+#sharemenu .device {
+    width:90%;
+    background: #249f60;
+    border:none;
+    color:white;
+    margin: 20px auto;
+    text-align: center;
+    height: 50px; 
+    line-height: 50px;
+    cursor:default;
+}
+
+#sharemenu .device#all {
+    background: #0f8649;
+}
+
+#sharemenu .device#cancel {
+    background: #be3e15;
+}
+
+#shareconfirm {
+    display:none;
+    color:white;
+    position:fixed;
+    top:0px;
+    left:50%;
+    width:400px;
+    margin-left: -200px;
+    background: #2b323a;
+    text-align:center;
+}
+
+#shareconfirm p {
+    margin:10px;
+}
+
+#shareconfirm.active {
+    display:block;
+}
+
+#shareconfirm div, #shareconfirm a {
+    text-decoration: none;
+    display:inline-block;
+    padding:5px;
+    width:160px;
+    margin:10px;
+    cursor:pointer;
+    color:white;
+}
+
+#shareconfirm a:active, #shareconfirm a:visited, a:hover {
+    color:white;
+    text-decoration: none;
+}
+
+#shareconfirm .ok {
+    background: #249f60;
+}
+
+#shareconfirm .cancel {
+    background: #be3e15;
 }
 
 #icon {

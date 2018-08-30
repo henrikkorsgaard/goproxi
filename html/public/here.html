@@ -104,14 +104,17 @@
         goproxi.DeviceObserver.on("DeviceChangedProximity", function (e) {
             hintUpdate()
             updateLocationList()
-            loadIframe(goproxi.DeviceObserver.proximity.document || "http://" + goproxi.DeviceObserver.proximity.ip)
+            loadIframe("http://" + goproxi.DeviceObserver.proximity.name + ".local")
+            //loadIframe(goproxi.DeviceObserver.proximity.document || "http://" + goproxi.DeviceObserver.proximity.ip)
         });
 
         goproxi.DeviceObserver.on("ready", function () {
             console.log("ready")
             hintUpdate()
             updateLocationList()
-            loadIframe(goproxi.DeviceObserver.proximity.document || "http://" + goproxi.DeviceObserver.proximity.ip)
+            console.log(goproxi.DeviceObserver)
+            loadIframe("http://" + goproxi.DeviceObserver.proximity.name + ".local")
+            //loadIframe(goproxi.DeviceObserver.proximity.document || "http://" + goproxi.DeviceObserver.proximity.ip)
         });
 
         goproxi.LocationObserver.on("ready", function () {

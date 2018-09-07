@@ -4,6 +4,60 @@
         timeout = 1000;
 
     var communications = {}
+    var locations = {} //locations seen by the device
+    var proximity = {} //proximity ->
+    var devices = {} //devices within proximity
+    var self = {}
+
+    var deviceObserver = {
+        on: function (event, handler) {
+            var events = event.split(" ")
+            for (var i = 0, n = events.length; i < n; i++) {
+                if (deviceListeners.hasOwnProperty(events[i]) && typeof (handler) === 'function') {
+                    deviceListeners[events[i]].push(handler);
+                } else {
+                    handler("Error: Unknown event type " + event);
+                }
+            }
+        },
+        locations: [],
+        device: self,
+        proximity: proximity,
+    };
+
+    var locationObserver = {
+        on: function (event, handler) {
+            var events = event.split(" ");
+            for (var i = 0, n = events.length; i < n; i++) {
+                if (locationListeners.hasOwnProperty(events[i]) && typeof (handler) === 'function') {
+                    locationListeners[events[i]].push(handler)
+                } else {
+                    handler("Error: Unknown event type " + event)
+                }
+            }
+        },
+        devices: [],
+        location: proximity,
+        ping: function (mac) {
+            sendMessage({
+                "request": "ping",
+                "mac": mac,
+                "payload": "Hello"
+            }, function (err, data) { });
+        },
+        broadcast: function (mac, url) {
+            if (ValidURL(url)) {
+                sendMessage({
+                    "request": "broadcast",
+                    "mac": mac,
+                    "url": url
+                }, function (err, data) { });
+            } else {
+                emmitError({ error: "Invalid Url" }, "place")
+            }
+        }
+    };
+    
 
     //TODO: Reach to events
 
@@ -16,47 +70,48 @@
         console.log("GoProxi websocket open")
         clearInterval(reconnect)
         attempts = 0;
+        fetchLocations().then(function (data) {
+            for(var i = 0, n = data.response.length; i < n; i++){
+                var l = data.response[i]
+                locations[l.mac] = l;
+            }
 
-        fetchLocations().then(function (locationData) {
+            deviceObserver.locations = Object.keys(locations).map(function(k) { return locations[k] });
 
-            placeObserver.locations = locationData.response;
+            fetchClient().then(function (data) {
+                for(var i = 0, n = data.response.locations.length; i < n; i++){
+                    var l = data.response.locations[i]
+                    locations[l.mac].signal = l.signal;
+                }
+    
+                delete data.response.locations
+                self = data.response
 
-            fetchDevices().then(function (deviceData) {
-                var evt = {
-                    type: "ready"
-                };
-                placeObserver.devices = deviceData.response;
-                emmitPlaceEvent(evt);
+                fetchProximity().then(function (data) {
+                    var signal = 0;
+                    for(var i = 0, n = data.response.devices.length; i < n; i++){
+                        var d = data.response.devices[i]
+                        devices[d.mac] = d;
+                        if(d.mac === self.mac){
+                            signal = d.signal;
+                        }
+                    }
+
+                    locationObserver.devices = Object.keys(devices).map(function(k) { return devices[k] });                    
+        
+                    delete data.response.devices
+                    proximity = data.response
+                    proximity.signal = signal
+
+                    var evt = {
+                        type: "ready"
+                    };
+
+                    emmitLocationEvent(evt);
+                    emmitDeviceEvent(evt);
+                })
             });
         });
-
-        fetchClient().then(function (data) {
-
-            var evt = {
-                type: "ready"
-            };
-
-            deviceObserver.proximity = data.response.proximity;
-            console.log(data.response)
-            deviceObserver.locations = data.response.locations;
-            delete data.response.locations;
-            delete data.response.proximity;
-
-            deviceObserver.device = data.response;
-
-            emmitDeviceEvent(evt)
-            fetchLocation(deviceObserver.proximity.mac).then(function (locationData) {
-                locationObserver.devices = locationData.response.devices;
-                delete data.response.devices;
-                locationObserver.location = locationData.response;
-                subscribeLocation(locationData.response.mac);
-                emmitLocationEvent(evt);
-            }).catch(function (err) {
-                console.log(err);
-            })
-        }).catch(function (err) {
-            console.log(err);
-        })
     }
 
     socket.onclose = function (e) {
@@ -73,7 +128,7 @@
         data = JSON.parse(e.data);
 
         if (data.hasOwnProperty("event")) {
-
+    
             var evt = {
                 type: data.event,
                 device: data.device,
@@ -81,7 +136,9 @@
             }
 
             if (data.type === "DeviceEvent") {
+
                 if (data.event === "DeviceChangedProximityZone") {
+                    
                     emmitDeviceEvent(evt);
                 } else if (data.event === "Ping") {
                     delete evt.location
@@ -103,8 +160,16 @@
                     evt.sender = data.sender;
                     evt.url = data.url;
                     emmitDeviceEvent(evt);
+                } else if (data.event === "DeviceSignalChange"){
+                    evt.signal = data.signal
+                    console.log(evt.location.mac)
+                    console.log(evt.signal)
+                    locations[evt.location.mac].signal = evt.signal
+                    deviceObserver.locations = Object.keys(locations).map(function(k) { return locations[k] });
+                    emmitDeviceEvent(evt);
                 }
             } else if (data.type === "LocationEvent") {
+                
                 if (data.event === "DeviceChangedProximityZone" || data.event === "DeviceJoinedLocation" || data.event === "DeviceLeftLocation") {
                     emmitLocationEvent(evt);
                 } else if (data.event === "DeviceJoined" || data.event === "DeviceLeft") {
@@ -140,18 +205,6 @@
     function emmitLocationEvent(event) {
         if (locationListeners.hasOwnProperty(event.type)) {
             var listeners = locationListeners[event.type]
-            for (var i = 0, n = listeners.length; i < n; i++) {
-                listeners[i](event);
-            }
-        } else {
-            console.log("Error: Unknown event type " + event.type);
-        }
-
-    }
-
-    function emmitPlaceEvent(event) {
-        if (placeListeners.hasOwnProperty(event.type)) {
-            var listeners = placeListeners[event.type]
             for (var i = 0, n = listeners.length; i < n; i++) {
                 listeners[i](event);
             }
@@ -202,23 +255,23 @@
     function updateLocation() {
         return new Promise(function (rs, rj) {
             unsubscribeLocation(deviceObserver.proximity.mac);
-            fetchClient().then(function (data) {
+            fetchProximity().then(function (data) {
+                var signal = 0;
+                for(var i = 0, n = data.response.devices.length; i < n; i++){
+                    var d = data.response.devices[i]
+                    devices[d.mac] = d;
+                    if(d.mac === self.mac){
+                        signal = d.signal;
+                    }
+                }
 
-                deviceObserver.proximity = data.response.proximity;
+                devicesArray = Object.keys(devices).map(function(k) { return devices[k] });                    
+    
+                delete data.response.devices
+                proximity = data.response
+                proximity.signal = signal
 
-                deviceObserver.locations = data.response.locations;
-                delete data.response.locations;
-                delete data.response.proximity;
-                deviceObserver.device = data.response;
-
-                fetchLocation(deviceObserver.proximity.mac).then(function (locationData) {
-                    locationObserver.devices = locationData.response.devices;
-                    delete data.response.devices;
-                    locationObserver.location = locationData.response;
-                    subscribeLocation(locationData.response.mac);
-                    rs();
-                }).catch(rj);
-            }).catch(rj);
+            }).catch(rj)
         })
     }
 
@@ -235,11 +288,10 @@
         });
     }
 
-    function fetchLocation(mac) {
+    function fetchProximity() {
         return new Promise(function (rs, rj) {
             sendMessage({
-                "request": "location",
-                "mac": mac
+                "request": "proximity"
             }, function (err, data) {
                 if (err) {
                     rj(err);
@@ -261,20 +313,6 @@
             });
         });
     }
-
-    function fetchDevices() {
-        return new Promise(function (rs, rj) {
-            sendMessage({
-                "request": "devices"
-            }, function (err, data) {
-                if (err) {
-                    rj(err);
-                }
-                rs(data);
-            });
-        });
-    }
-
 
 
     function subscribeLocation(mac) {
@@ -300,92 +338,22 @@
         "Error": []
     };
 
-    var placeListeners = {
-        "ready": [],
-        "DeviceJoined": [],
-        "DeviceLeft": [],
-        "LocationDiscovered": [],
-        "LocationDisappeared": [],
-        "Error": []
-    };
-
     var deviceListeners = {
         "ready": [],
         "DeviceChangedProximityZone": [],
         "DeviceChangedProximity": [],
         "Ping": [],
         "Broadcast": [],
+        "DeviceSignalChange": [],
         "Error": []
     };
 
-    var deviceObserver = {
-        on: function (event, handler) {
-            var events = event.split(" ")
-            for (var i = 0, n = events.length; i < n; i++) {
-                if (deviceListeners.hasOwnProperty(events[i]) && typeof (handler) === 'function') {
-                    deviceListeners[events[i]].push(handler);
-                } else {
-                    handler("Error: Unknown event type " + event);
-                }
-            }
-        },
-        locations: [],
-        device: {},
-        proximity: {},
-    };
+    
 
-    var locationObserver = {
-        on: function (event, handler) {
-            var events = event.split(" ");
-            for (var i = 0, n = events.length; i < n; i++) {
-                if (locationListeners.hasOwnProperty(events[i]) && typeof (handler) === 'function') {
-                    locationListeners[events[i]].push(handler)
-                } else {
-                    handler("Error: Unknown event type " + event)
-                }
-            }
-        },
-        devices: [],
-        location: {}
-    };
-
-    var placeObserver = {
-        on: function (event, handler) {
-            var events = event.split(" ");
-            for (var i = 0, n = events.length; i < n; i++) {
-                if (placeListeners.hasOwnProperty(events[i]) && typeof (handler) === 'function') {
-                    placeListeners[events[i]].push(handler)
-                } else {
-                    handler("Error: Unknown event type " + event)
-                }
-            }
-        },
-        ping: function (mac) {
-            sendMessage({
-                "request": "ping",
-                "mac": mac,
-                "payload": "Hello"
-            }, function (err, data) { });
-        },
-        broadcast: function (mac, url) {
-            if (ValidURL(url)) {
-                sendMessage({
-                    "request": "broadcast",
-                    "mac": mac,
-                    "url": url
-                }, function (err, data) { });
-            } else {
-                emmitError({ error: "Invalid Url" }, "place")
-            }
-        },
-        devices: [],
-        locations: []
-    };
 
     goproxi = {
         DeviceObserver: deviceObserver,
-        LocationObserver: locationObserver,
-        PlaceObserver: placeObserver
+        LocationObserver: locationObserver
     };
 
     function ValidURL(str) {

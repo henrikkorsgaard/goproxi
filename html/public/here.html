@@ -22,7 +22,11 @@
     </div>
     <div id="menu">
         <div id="icon">
+            <div id="icon-shadow"></div>
+            <div id="icon-img"></div>
+            
         </div>
+        
         <div id="locations">
             <p>Locations</p>
         </div>
@@ -45,8 +49,9 @@
         var redirect = true;
 
         menuElement.addEventListener("click", function (evt) {
+
             var t = evt.target
-            if (t.id === "icon") {
+            if (t.id === "icon" || t.parentNode.id === "icon") {
                 menuElement.classList.toggle("active")
             } else if (t.id === "explore") {
                 loadIframe("public/explore.html")

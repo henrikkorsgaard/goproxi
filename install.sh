@@ -10,7 +10,7 @@ apt-get -y upgrade
 
 # Install nmap, hostapd, dnsmasq, libpcap-dev, wireless-tools, avahi-daemon, avahi-utils, git, mongodb
 echo "Installing external dependencies"
-apt-get install -y nmap hostapd dnsmasq libpcap-dev wireless-tools avahi-daemon avahi-utils git mongodb
+apt-get install -y nmap hostapd dnsmasq libpcap-dev wireless-tools avahi-daemon avahi-utils git mongodb apache2
 
 # Disabling network services on startup
 echo "Disabling network services on startup"
@@ -58,6 +58,9 @@ systemctl enable webstrates.service
 systemctl daemon-reload
 
 # Adding the webstrates service
+echo "Disabling Apache2 on startup"
+systemctl disable apache2.service
+
 echo "Rebooting now"
 reboot now
 

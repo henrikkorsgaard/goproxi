@@ -60,6 +60,20 @@ systemctl daemon-reload
 # Adding the webstrates service
 echo "Disabling Apache2 on startup"
 systemctl disable apache2.service
+a2enmod expires
+a2enmod ssl
+a2enmod headers
+a2enmod proxy
+a2enmod proxy_http
+
+#Listen ports
+echo "Listen 80\nListen1338\n<IfModule ssl_module>\n\tListen443\n</IfModule>\n\n<IfModule mod_gnutls.c>\n\tListen443\n</IfModule>"  | tee /etc/apache2/ports.conf
+
+
+#ServerName
+echo "ServerName localhost" | tee /etc/apache2/conf-available/servername.conf
+a2enconf servername
+
 
 echo "Rebooting now"
 reboot now

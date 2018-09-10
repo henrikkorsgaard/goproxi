@@ -189,9 +189,9 @@
 
         function updateLocationList() {
 
-            var locations = goproxi.PlaceObserver.locations;
+            var locations = goproxi.DeviceObserver.locations;
             var proximity = goproxi.DeviceObserver.proximity;
-
+            
             var locationElements = document.querySelectorAll("#menu .item.location")
             var proximityElement = document.querySelector("#proximity")
             if (!proximityElement) {
@@ -236,9 +236,7 @@
 
         function loadShareMenu() {
             var devices = goproxi.LocationObserver.devices;
-            console.log(devices)
             var devicesElement = document.querySelector("devices")
-            console.log(goproxi.DeviceObserver.proximity)
         }
 
         function loadIframe(target) {

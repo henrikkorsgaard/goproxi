@@ -16,25 +16,35 @@
         </div>
 
     <script>
+        
         var goproxi = window.top.goproxi;
+        
         var locationsElement = document.querySelector("#locations")
         var devicesElement = document.querySelector("#devices")
         var selfElement = document.querySelector("#self")
-
-        var locations = goproxi.PlaceObserver.locations
-        var devices = goproxi.PlaceObserver.devices
+        
+        var locations = goproxi.DeviceObserver.locations
+        
+        var devices = goproxi.LocationObserver.devices
+        console.log(devices)
         var proximity = goproxi.DeviceObserver.proximity
         var self = goproxi.DeviceObserver.device
         
-        goproxi.PlaceObserver.on("DeviceLeft", leftHandler);
-        goproxi.PlaceObserver.on("DeviceJoined", joinedHandler);
-
+        /*
+        goproxi.LocationObserver.on("DeviceLeft", leftHandler);
+        goproxi.LocationObserver.on("DeviceJoined", joinedHandler);
+        */
         function leftHandler(evt){
+            console.log(evt)
+            /*
             var d = document.querySelector("#" + evt.device.name)
             d.parentNode.removeChild(d)
+            */
         }
 
         function joinedHandler(evt){
+            console.log(evt)
+            /*
             var d = evt.device
             var el = document.createElement("div");
             el.classList = "device"
@@ -54,7 +64,7 @@
             el.innerHTML = html;
             
             devicesElement.appendChild(el)
-            
+            */
         }
         
         for (var i = 0, n = locations.length; i < n; i++) {
@@ -71,7 +81,7 @@
             el.innerHTML += `<a target="_top" href="http://${locations[i].name}.local/calibrate">CALIBRATE</a>`;
             locationsElement.appendChild(el)
         }
-
+        
         for (var i = 0, n = devices.length; i < n; i++) {
             var el = document.createElement("div");
             el.classList = "device"
@@ -83,12 +93,8 @@
             var html = `<h4>${devices[i].name}</h4><div class="ping">PING</div>`
             html += `<div>IP: ${devices[i].ip}</div>`;
             html += '<table><tr><th>Location</th><th>Signal</th></tr>';
-            
-            var deviceLocations = devices[i].locations
-            for(var j = 0, k = deviceLocations.length; j < k; j++ ){
-                html += '<tr><td>' + deviceLocations[j].name + '</td><td>' + deviceLocations[j].signal + '</td></tr>'
-            }
-            
+            html += '<tr><td>' + proximity.name + '</td><td>' + devices[i].signal + '</td></tr>'
+           
             html += '</table>';
             el.innerHTML = html;
             

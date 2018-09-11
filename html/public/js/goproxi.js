@@ -151,7 +151,10 @@
 
                     emmitDeviceEvent(evt);
                 } else if (data.event === "DeviceChangedProximity") {
+                    console.log("changed proximity")
+
                     updateLocation().then(function () {
+                        console.log(evt)
                         emmitDeviceEvent(evt);
                     }).catch(function (err) {
                         console.log(err);
@@ -256,20 +259,26 @@
         return new Promise(function (rs, rj) {
             unsubscribeLocation(deviceObserver.proximity.mac);
             fetchProximity().then(function (data) {
+                
+                
                 var signal = 0;
-                for(var i = 0, n = data.response.devices.length; i < n; i++){
-                    var d = data.response.devices[i]
-                    devices[d.mac] = d;
-                    if(d.mac === self.mac){
-                        signal = d.signal;
-                    }
+                var devicesArr = data.response.devices
+                    for(var i = 0, n = devicesArr.length; i < n; i++){
+                        var d = devicesArr[i]
+                        devices[d.mac] = d;
+                        if(d.mac === self.mac){
+                            signal = d.signal;
+                        }
                 }
-
-                devicesArray = Object.keys(devices).map(function(k) { return devices[k] });                    
-    
+                
+                locationObserver.devices = Object.keys(devices).map(function(k) { return devices[k] });                    
+        
                 delete data.response.devices
-                proximity = data.response
-                proximity.signal = signal
+                    
+                deviceObserver.proximity = data.response
+                deviceObserver.proximity.signal = signal
+                rs()
+                
 
             }).catch(rj)
         })

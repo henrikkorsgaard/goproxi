@@ -60,7 +60,7 @@
                 menuElement.classList.toggle("active")
                 shareMenuElement.classList.toggle("active")
             } else if (t.classList.contains("location")) {
-                loadIframe("http://" + t.dataset.name + ".local");
+                loadIframe("http://" + t.dataset.ip + "/");
                 menuElement.classList.toggle("active")
             }
 
@@ -107,7 +107,7 @@
         goproxi.DeviceObserver.on("DeviceChangedProximity", function (e) {
             hintUpdate()
             updateLocationList()
-            loadIframe("http://" + goproxi.DeviceObserver.proximity.name + ".local")
+            loadIframe("http://" + goproxi.DeviceObserver.proximity.ip + "/")
             //loadIframe(goproxi.DeviceObserver.proximity.document || "http://" + goproxi.DeviceObserver.proximity.ip)
         });
 
@@ -116,7 +116,7 @@
             hintUpdate()
             updateLocationList()
             console.log(goproxi.DeviceObserver)
-            loadIframe("http://" + goproxi.DeviceObserver.proximity.name + ".local")
+            loadIframe("http://" + goproxi.DeviceObserver.proximity.ip + "/")
             //loadIframe(goproxi.DeviceObserver.proximity.document || "http://" + goproxi.DeviceObserver.proximity.ip)
         });
 
@@ -200,7 +200,7 @@
             }
 
             proximityElement.innerHTML = proximity.name;
-            proximityElement.dataset.name = proximity.name;
+            proximityElement.dataset.ip = proximity.ip;
 
 
             //1. We want to have proximity at top :

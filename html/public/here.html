@@ -72,15 +72,13 @@
         shareMenuElement.addEventListener("click", function (evt) {
             var t = evt.target
             var input = shareMenuElement.querySelector("input");
-            console.log("valid?", ValidURL(input.value))
             if (t.id === "cancel") {
                 shareMenuElement.classList.toggle("active")
             } else if (t.id === "all" && ValidURL(input.value)) {
-                goproxi.PlaceObserver.broadcast("*", input.value);
+                goproxi.LocationObserver.broadcast("*", input.value);
                 shareMenuElement.classList.toggle("active")
             } else if (t.classList.contains("device") && ValidURL(input.value)) {
-                console.log(t.dataset.mac)
-                goproxi.PlaceObserver.broadcast(t.dataset.mac, input.value);
+                goproxi.LocationObserver.broadcast(t.dataset.mac, input.value);
                 shareMenuElement.classList.toggle("active")
             } else if(t.classList.contains("device") || t.id === "all" && !ValidURL(input.value)){
                 input.value = ""

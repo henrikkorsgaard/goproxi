@@ -164,8 +164,6 @@
                     emmitDeviceEvent(evt);
                 } else if (data.event === "DeviceSignalChange"){
                     evt.signal = data.signal
-                    console.log(evt.location.mac)
-                    console.log(evt.signal)
                     locations[evt.location.mac].signal = evt.signal
                     deviceObserver.locations = Object.keys(locations).map(function(k) { return locations[k] });
                     emmitDeviceEvent(evt);

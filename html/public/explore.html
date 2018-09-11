@@ -26,25 +26,33 @@
         var locations = goproxi.DeviceObserver.locations
         
         var devices = goproxi.LocationObserver.devices
-        console.log(devices)
+
         var proximity = goproxi.DeviceObserver.proximity
         var self = goproxi.DeviceObserver.device
         
-        /*
-        goproxi.LocationObserver.on("DeviceLeft", leftHandler);
-        goproxi.LocationObserver.on("DeviceJoined", joinedHandler);
-        */
+        
+        goproxi.LocationObserver.on("DeviceLeftLocation", leftHandler);
+        goproxi.LocationObserver.on("DeviceJoinedLocation", joinedHandler);
+
+        goproxi.DeviceObserver.on("DeviceSignalChange", signalChange);
+
+        function signalChange(evt){
+            var deviceElement = devicesElement.querySelector("#device-" + stripMac(evt.device.mac))
+            var signalElement = deviceElement.querySelector(".location-"+stripMac(evt.location.mac)+" td.signal");
+            signalElement.innerHTML = evt.signal
+
+        }
+        
         function leftHandler(evt){
             console.log(evt)
-            /*
             var d = document.querySelector("#" + evt.device.name)
             d.parentNode.removeChild(d)
-            */
+            
         }
 
         function joinedHandler(evt){
+            console.log("device joined")
             console.log(evt)
-            /*
             var d = evt.device
             var el = document.createElement("div");
             el.classList = "device"
@@ -58,17 +66,15 @@
             html += '<table><tr><th>Location</th><th>Signal</th></tr>';
             
             var p = d.proximity
-            html += '<tr><td>' + p.name + '</td><td>' + p.signal + '</td></tr>'
+            html += '<tr class="location-'+ stripMac(p.mac) + '"><td>' + p.name + '</td><td class="signal">' + p.signal + '</td></tr>'
             
             html += '</table>';
             el.innerHTML = html;
             
             devicesElement.appendChild(el)
-            */
         }
         
         for (var i = 0, n = locations.length; i < n; i++) {
-            
             var el = document.createElement("div");
             el.classList = "location"
             if(locations[i].contextserver){
@@ -88,12 +94,13 @@
             if( devices[i].mac === self.mac){
                 el.classList.add("self")
             }
-            el.dataset.mac = devices[i].mac
-            el.id = devices[i].name
+            
+            el.id = "device-"+stripMac(devices[i].mac)
+            
             var html = `<h4>${devices[i].name}</h4><div class="ping">PING</div>`
             html += `<div>IP: ${devices[i].ip}</div>`;
             html += '<table><tr><th>Location</th><th>Signal</th></tr>';
-            html += '<tr><td>' + proximity.name + '</td><td>' + devices[i].signal + '</td></tr>'
+            html += '<tr class="location-'+ stripMac(proximity.mac) + '"><td>' + proximity.name + '</td><td class="signal">' + devices[i].signal + '</td></tr>'
            
             html += '</table>';
             el.innerHTML = html;
@@ -106,13 +113,15 @@
             if(t.classList.contains("ping")){
                var d = t.parentNode
                
-               goproxi.PlaceObserver.ping(d.dataset.mac)
+               goproxi.LocationObserver.ping(d.dataset.mac)
             }
         });
 
         
 
-        
+        function stripMac(mac){
+            return mac.replace(/\:/g, "")
+        }
         
     </script>
     </body>

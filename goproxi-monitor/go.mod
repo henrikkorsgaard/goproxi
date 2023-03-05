@@ -1,4 +1,4 @@
-module github.com/henrikkorsgaard/goproxy/proximity_monitor
+module github.com/henrikkorsgaard/goproxy/goproxi-monitor
 
 go 1.19
 
@@ -12,3 +12,6 @@ require (
 	golang.org/x/sys v0.1.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+
+replace "github.com/henrikkorsgaard/goproxy/device-proximity-detector/monitor" ./monitor

@@ -21,9 +21,25 @@ type Device struct {
 	Signal int 
 }
 
-type ProximityMonitor struct {}
+//https://www.devdungeon.com/content/packet-capture-injection-and-analysis-gopacket
+
+type ProximityMonitor struct {
+	NetworkInterfaceName string
+	Subscriber ProximitySubscriber
+	StationMAC string //?
+}
 
 func (pm *ProximityMonitor) Start() error {
+
+	// we do the channel internally and then capture it there
+
+
+	// We need to end on the monitor open
+
+	return nil
+}
+
+func (pm *ProximityMonitor) Stop() error {
 	return nil
 }
 
@@ -91,4 +107,5 @@ func (mpm *MockProximityMonitor) Stop() error {
 	mpm.run = false
 	return nil
 }
+
 

@@ -3,11 +3,14 @@ module github.com/henrikkorsgaard/goproxi/proximity
 go 1.20
 
 require (
+	github.com/google/gopacket v1.1.19
+	github.com/stretchr/testify v1.8.2
+)
+
+require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/google/gopacket v1.1.19 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/testify v1.8.2 // indirect
-	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
-	golang.org/x/sys v0.0.0-20190412213103-97732733099d // indirect
+	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

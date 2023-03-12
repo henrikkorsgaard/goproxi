@@ -23,12 +23,6 @@ type Device struct {
 	Signal int8
 }
 
-/*
-type Device struct {
-	HardwareAddr net.HardwareAddr
-	Signal int 
-}*/
-
 //If this becomes more complex, we should initiate it as a struct and then do .Monitor()
 func MonitorNetworkTraffic(iface string) {
 	stationMac, _ := net.ParseMAC("e9:e9:e9:e9:e9:e9") 
@@ -50,9 +44,9 @@ func MonitorNetworkTraffic(iface string) {
 
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
     for packet := range packetSource.Packets() {
-        handlePacket(packet, stationMac)
-    }
-
+        device, _ := handlePacket(packet, stationMac)
+		//Now we need to consider integrating the station and a subscriber
+	}
 }
 
 func handlePacket(packet gopacket.Packet, station net.HardwareAddr) (Device, error){

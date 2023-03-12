@@ -9,8 +9,7 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
-
-func TestHandlePacketDeviceIdentification(t *testing.T){
+func TestHandlePacketDeviceIdentificationStationFirst(t *testing.T){
 	
 	stationMac, _ := net.ParseMAC("e9:e9:e9:e9:e9:e9") 
 	clientMac, _ := net.ParseMAC("c3:c3:c3:c3:c3:c3")
@@ -23,6 +22,55 @@ func TestHandlePacketDeviceIdentification(t *testing.T){
 	dot11Layer := &layers.Dot11 {
 		Address1: stationMac,
 		Address2: clientMac,
+	}
+
+	dot11MgtLayer := &layers.Dot11MgmtAssociationReq {}
+
+	dot11InfoLayer := &layers.Dot11InformationElement {
+		ID:layers.Dot11InformationElementID(0),
+		Info: []byte("TEST"),
+	}
+
+	buffer := gopacket.NewSerializeBuffer()
+	options := gopacket.SerializeOptions{}
+
+    gopacket.SerializeLayers(buffer, options,
+        radioLayer,
+        dot11Layer,
+		dot11MgtLayer,
+		dot11InfoLayer,
+        gopacket.Payload([]byte{}),
+    )
+	
+	testPacket := gopacket.NewPacket(
+		buffer.Bytes(),
+		layers.LayerTypeRadioTap,
+		gopacket.Default,
+	)
+
+	device, err := handlePacket(testPacket, stationMac)
+	if err != nil {
+		t.Fatalf("Unexpected error from HandlePacket: %v", err)
+	}
+
+	expectedDevice := Device{MacAddr: clientMac, Signal:-50}
+
+	assert.Equal(t,expectedDevice, device)
+}
+
+func TestHandlePacketDeviceIdentificationClientFirst(t *testing.T){
+	
+	stationMac, _ := net.ParseMAC("e9:e9:e9:e9:e9:e9") 
+	clientMac, _ := net.ParseMAC("c3:c3:c3:c3:c3:c3")
+	
+	radioLayer := &layers.RadioTap {
+		DBMAntennaSignal: -50,
+		Length:9, //Set lengt to aling with the packet parsing (to compensate for lacking content)
+		Present:32, //Indicating DBMAntennaSignal present
+	}
+	dot11Layer := &layers.Dot11 {
+		Address1: clientMac,
+		Address2: stationMac,
 	}
 
 	dot11MgtLayer := &layers.Dot11MgmtAssociationReq {}

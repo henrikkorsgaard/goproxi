@@ -2,6 +2,7 @@ package main
 
 
 import (
+
 	"github.com/henrikkorsgaard/goproxi/proximity/network"
 )
 /*
@@ -19,5 +20,7 @@ https://www.devdungeon.com/content/packet-capture-injection-and-analysis-gopacke
 */
 
 func main(){
+
 	network.MonitorNetworkTraffic("gomon")
+	
 }
